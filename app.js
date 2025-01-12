@@ -66,6 +66,48 @@ const deleteTour = (req, res) => {
   res.status(200).send('the hotel was deleted successfully');
 };
 
+// Users api
+
+const getAllUsers = (req, res) => {
+  res.status(500).json({
+    status: 'error',
+    message: 'this route is not yet defined',
+  });
+};
+const addNewUser = (req, res) => {
+  res.status(500).json({
+    status: 'error',
+    message: 'this route is not yet defined',
+  });
+};
+const getUser = (req, res) => {
+  res.status(500).json({
+    status: 'error',
+    message: 'this route is not yet defined',
+  });
+};
+const deleteUser = (req, res) => {
+  res.status(500).json({
+    status: 'error',
+    message: 'this route is not yet defined',
+  });
+};
+const UpdateUser = (req, res) => {
+  res.status(500).json({
+    status: 'error',
+    message: 'this route is not yet defined',
+  });
+};
+
+const userRouter = express.Router();
+app.use('/api/v1/users', userRouter);
+
+// users
+userRouter.route('/').post(addNewUser).get(getAllUsers);
+
+// user
+app.route('/:id').get(getUser).patch(UpdateUser).delete(deleteUser);
+
 // refactoring
 
 // tichnique one
@@ -73,9 +115,12 @@ const deleteTour = (req, res) => {
 // app.get('/api/v1/tours', getAllTours);
 // app.post('/api/v1/tours', addNewTour);
 
+const tourRouter = express.Router();
+app.use('/api/v1/tours', tourRouter);
+
 // tichnique one two
-app.route('/api/v1/tours').get(getAllTours).post(addNewTour);
-app.route('/api/v1/tours/:id').delete(deleteTour);
+tourRouter.route('/').get(getAllTours).post(addNewTour);
+tourRouter.route('/:id').delete(deleteTour);
 
 const port = 3000;
 app.listen(port, () => {
