@@ -14,6 +14,25 @@ exports.getAllTours = (req, res) => {
   });
 };
 
+exports.getTour = (req, res) => {
+  const id = req.params.id * 1;
+  const tour = tours.find((tour) => tour.id === id);
+
+  if (!tour) {
+    return res.json(404, {
+      status: false,
+      message: 'there is no tour with this id',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      tour,
+    },
+  });
+};
+
 exports.addNewTour = (req, res) => {
   const newId = tours[tours.length - 1].id + 1;
   const newTour = Object.assign({ id: newId }, req.body);
