@@ -8,7 +8,8 @@ const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
 );
 
-app.get('/api/v1/tours', (req, res) => {
+const getAllTours = (req, res) => {
+  console.log('get all tours bbe');
   res.status(200).json({
     status: 'success',
     results: tours.length,
@@ -16,9 +17,9 @@ app.get('/api/v1/tours', (req, res) => {
       tours,
     },
   });
-});
+};
 
-app.post('/api/v1/tours', (req, res) => {
+const addNewTour = (req, res) => {
   const newId = tours[tours.length - 1].id + 1;
   const newTour = Object.assign({ id: newId }, req.body);
 
@@ -37,9 +38,9 @@ app.post('/api/v1/tours', (req, res) => {
       tour: newTour,
     },
   });
-});
+};
 
-app.delete('/api/v1/tours/:id', (req, res) => {
+const deleteTour = (req, res) => {
   // const idHotel = req.params.id;
 
   const deletedHotel = tours.findIndex((hotel, index) => {
@@ -62,10 +63,21 @@ app.delete('/api/v1/tours/:id', (req, res) => {
       }
     }
   );
-
   res.status(200).send('the hotel was deleted successfully');
-});
+};
 
-app.listen(3000, () => {
-  console.log(`this is the server running on port 3000`);
+// refactoring
+
+// tichnique one
+// app.delete('/api/v1/tours/:id', deleteTour);
+// app.get('/api/v1/tours', getAllTours);
+// app.post('/api/v1/tours', addNewTour);
+
+// tichnique one two
+app.route('/api/v1/tours').get(getAllTours).post(addNewTour);
+app.route('/api/v1/tours/:id').delete(deleteTour);
+
+const port = 3000;
+app.listen(port, () => {
+  console.log(`app running on port ${port}`);
 });
