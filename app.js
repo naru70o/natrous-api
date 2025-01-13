@@ -5,6 +5,7 @@ const userRouter = require('./routes/userRoutes');
 const tourRouter = require('./routes/tourRoutes');
 
 app.use(express.json());
+app.use(express.static(`${__dirname}/public`));
 
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/tours', tourRouter);
