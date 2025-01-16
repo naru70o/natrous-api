@@ -1,44 +1,166 @@
 const fs = require('fs');
-const Tour = require('../models/tourModel');
+const { Tour } = require('../models/tourModel');
 
-exports.getAllTours = (req, res) => {
-  res.status(200).json({
-    status: 'success'
-    // results: tours.length,
-    // data: {
-    //   tours
-    // }
-  });
-};
+exports.getAllTours = async (req, res) => {
+  try {
+    // STEP 1: Filtering
+    // Copy the query object
+    const queryObj = { ...req.query };
 
-exports.getTour = (req, res) => {
-  // if (!tour) {
-  //   return res.json(404, {
-  //     status: false,
-  //     message: 'there is no tour with this id'
-  //   });
-  // }
+    // Exclude fields that are not for filtering (e.g., sort, page, limit)
+    const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    excludedFields.forEach(el => delete queryObj[el]);
 
-  res.status(200).json({
-    status: 'success'
-    // data: {
-    //   tour
-    // }
-  });
-};
+    // STEP 2: Advanced Filtering (e.g., price[gt]=100)
+    // Convert the query object to a string
+    let queryStr = JSON.stringify(queryObj);
 
-exports.addNewTour = (req, res) => {
-  // const newId = tours[tours.length - 1].id + 1;
-  const newTour = Object.assign({ id: 1 }, req.body);
+    // Replace gt, gte, lt, lte with $gt, $gte, $lt, $lte (MongoDB operators)
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
 
-  res.status(201).json({
-    status: 'success',
-    data: {
-      tour: newTour
+    // Parse the string back to an object
+    let query = Tour.find(JSON.parse(queryStr));
+
+    // SORTING
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+      console.log(sortBy);
+      query = query.sort(sortBy);
+    } else {
+      console.log('Default sorting by duration');
+      query = query.sort('-createdAt');
     }
-  });
+
+    // FIELD LIMITING
+    if (req.query.fields) {
+      const fields = req.query.fields.split(',').join(' ');
+      query = query.select(fields);
+    } else {
+      query = query.select('-__v');
+    }
+
+    //  Pagination
+    const page = req.query.page * 1 || 1; // Default page is 1
+    const limit = req.query.limit * 1 || 10; // Default limit is 10
+    const skip = (page - 1) * limit; // Calculate the number of documents to skip
+
+    query = query.skip(skip).limit(limit);
+
+    if (req.query.page) {
+      const numTours = await Tour.countDocuments();
+      if (skip >= numTours) throw new Error('This page does not exist');
+    }
+
+    // STEP 3: Execute the query
+    const tours = await query;
+    // this how the query look like quer.sort().select().skip().limit()
+    // this is called chaining and it is possible becouse the query is an
+    //  object the we can chain methods on it and return it then wait for the result
+
+    res.status(200).json({
+      status: 'success',
+      results: tours.length,
+      tours
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message
+    });
+  }
 };
 
-exports.deleteTour = (req, res) => {
-  res.status(200).send('the hotel was deleted successfully');
+exports.getTour = async (req, res) => {
+  try {
+    const tour = await Tour.findById(req.params.id);
+    res.status(200).json({
+      status: 'success',
+      message: 'tour found',
+      tour
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: 'fail',
+      message: 'tour not founs'
+    });
+  }
+};
+
+exports.addNewTour = async (req, res) => {
+  try {
+    const newTour = await Tour.create(req.body);
+    res.status(201).json({
+      status: 'success',
+      message: 'new tour added successfully',
+      data: {
+        tour: newTour
+      }
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message
+    });
+  }
+};
+
+exports.addNewTours = async (req, res) => {
+  try {
+    // Check if the request body is an array
+    if (!Array.isArray(req.body)) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Request body should be an array of tours'
+      });
+    }
+
+    // Insert multiple tours into the database
+    const newTours = await Tour.insertMany(req.body);
+
+    res.status(201).json({
+      status: 'success',
+      message: 'Tours added successfully',
+      data: {
+        tours: newTours
+      }
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message
+    });
+  }
+};
+
+exports.deleteTour = async (req, res) => {
+  try {
+    await Tour.findByIdAndDelete(req.params.id);
+    res.status(204).json({
+      status: 'success',
+      message: 'Tour Deleted'
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: 'Tour Not Found'
+    });
+  }
+};
+
+exports.deleteAllTours = async (req, res) => {
+  try {
+    const result = await Tour.deleteMany({});
+
+    console.log(`${result.deletedCount} tours deleted successfully.`);
+    res.status(200).json({
+      status: 'success',
+      message: `${result.deletedCount} tours deleted successfully.`
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: `Error deleting tours`
+    });
+    console.error('Error deleting tours:', err);
+  }
 };

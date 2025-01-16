@@ -4,7 +4,9 @@ const {
   getAllTours,
   getTour,
   addNewTour,
+  addNewTours,
   deleteTour,
+  deleteAllTours
 } = require('../controllers/tourController');
 
 const router = express.Router();
@@ -14,7 +16,15 @@ router.param('id', (req, res, next, val) => {
   next();
 });
 
-router.route('/').get(getAllTours).post(addNewTour);
-router.route('/:id').delete(deleteTour).get(getTour);
+router
+  .route('/')
+  .get(getAllTours)
+  .post(addNewTour)
+  .post(addNewTours)
+  .delete(deleteAllTours);
+router
+  .route('/:id')
+  .delete(deleteTour)
+  .get(getTour);
 
 module.exports = router;
