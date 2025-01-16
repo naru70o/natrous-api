@@ -1,12 +1,12 @@
 const express = require('express');
-const fs = require('fs');
 const {
   getAllTours,
   getTour,
   addNewTour,
   addNewTours,
   deleteTour,
-  deleteAllTours
+  deleteAllTours,
+  topTours
 } = require('../controllers/tourController');
 
 const router = express.Router();
@@ -15,6 +15,8 @@ router.param('id', (req, res, next, val) => {
   console.log('Tour id is: ', val);
   next();
 });
+
+router.route('/top-tours').get(topTours, getAllTours);
 
 router
   .route('/')
