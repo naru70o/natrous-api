@@ -198,6 +198,33 @@ exports.addNewTour = async (req, res) => {
   }
 };
 
+exports.updateTour = async (req, res) => {
+  try {
+    const updatedTour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+      new: true
+    });
+
+    if (!updatedTour) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Tour not found'
+      });
+    }
+
+    // If the tour is found, update it
+    res.status(200).json({
+      status: 'success',
+      message: 'Tour updated successfully',
+      updatedTour
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'fail',
+      message: 'Tour not found'
+    });
+  }
+};
+
 exports.addNewTours = async (req, res) => {
   try {
     // Check if the request body is an array

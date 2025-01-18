@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -114,5 +115,24 @@ const tourSchema = new mongoose.Schema(
     toObject: { virtuals: true }
   }
 );
+
+// virtual properties are properties that are not stored in the database but are calculated using some other values
+tourSchema.virtual('tourNames').get(function() {
+  return this.name;
+});
+
+// create for me a document middleware that will be called when new tour is created
+tourSchema.pre('save', function(next) {
+  const slug = this.name;
+  this.slug = slugify(slug, { lower: true });
+  console.log(`${this.name} was created`);
+  next();
+});
+
+// Middleware for deleteOne
+tourSchema.pre('deleteOne', function(next) {
+  console.log('About to delete a document');
+  next();
+});
 
 exports.Tour = mongoose.model('Tour', tourSchema);

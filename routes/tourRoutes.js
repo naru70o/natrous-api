@@ -7,11 +7,13 @@ const {
   deleteTour,
   deleteAllTours,
   topTours,
-  mostBookedMonth
+  mostBookedMonth,
+  updateTour
 } = require('../controllers/tourController');
 
 const router = express.Router();
 
+// param middleware
 router.param('id', (req, res, next, val) => {
   console.log('Tour id is: ', val);
   next();
@@ -29,6 +31,7 @@ router
 router
   .route('/:id')
   .delete(deleteTour)
-  .get(getTour);
+  .get(getTour)
+  .patch(updateTour);
 
 module.exports = router;
