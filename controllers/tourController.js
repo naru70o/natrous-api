@@ -1,11 +1,55 @@
 const { Tour } = require('../models/tourModel');
-const APIFeatures = require('../utils/apiFeatures');
+const APIFeatures = require('../utils/ApiFeatures');
 
 exports.topTours = (req, res, next) => {
   req.query.limit = '5';
   req.query.sort = '-ratingsAverage,price';
   req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
   next();
+};
+
+// aggregation pipelines
+exports.mostBookedMonth = async (req, res) => {
+  try {
+    const busiestMonth = await Tour.aggregate([
+      // STEP 1: Unwind the startDates array
+      { $unwind: '$startDates' },
+
+      // STEP 2: Extract the month from each startDate
+      {
+        $project: {
+          month: { $month: '$startDates' } // Extract month (1-12)
+        }
+      },
+
+      // STEP 3: Group by month and count the number of tours
+      {
+        $group: {
+          _id: '$month', // Group by month
+          numTours: { $sum: 1 } // Count the number of tours
+        }
+      },
+
+      // STEP 4: Sort by the number of tours in descending order
+      { $sort: { numTours: -1 } }
+
+      // STEP 5: Limit to the top result (busiest month)
+      // { $limit: 1 }
+    ]);
+
+    // STEP 6: Send the response
+    res.status(200).json({
+      status: 'success',
+      data: {
+        busiestMonth // Return the busiest month
+      }
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message
+    });
+  }
 };
 
 exports.getAllTours = async (req, res) => {
