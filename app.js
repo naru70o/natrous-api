@@ -1,6 +1,7 @@
+const prisma = require("./prisma.js")
 const dotenv = require('dotenv');
 
-dotenv.config({ path: './config.env' });
+dotenv.config();
 const express = require('express');
 
 const app = express();
@@ -12,6 +13,15 @@ app.use(express.static(`${__dirname}/public`));
 
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/tours', tourRouter);
+
+// it works - it's time to migrate then
+async function main() {
+  // ... you will write your Prisma Client queries here
+  const allTours = await prisma.tour.findMany();
+  console.log(allTours);
+}
+
+main();
 
 module.exports = app;
 // tichnique one
