@@ -1,4 +1,5 @@
 const { Tour } = require('../models/tourModel');
+const prisma = require('./../prisma');
 const APIFeatures = require('../utils/ApiFeatures');
 
 exports.topTours = (req, res, next) => {
@@ -54,14 +55,14 @@ exports.mostBookedMonth = async (req, res) => {
 
 exports.getAllTours = async (req, res) => {
   try {
-    const features = new APIFeatures(Tour.find(), req.query)
-      .filter()
-      .sort()
-      .limitFields()
-      .paginate();
+    // const features = new APIFeatures(Tour.find(), req.query)
+    //   .filter()
+    //   .sort()
+    //   .limitFields()
+    //   .paginate();
 
     // STEP 3: Execute the query
-    const tours = await features.query;
+    const tours = await prisma.tour.findMany();
     // this how the query look like quer.sort().select().skip().limit()
     // this is called chaining and it is possible becouse the query is an
     //  object the we can chain methods on it and return it then wait for the result
@@ -81,7 +82,7 @@ exports.getAllTours = async (req, res) => {
 
 exports.getTour = async (req, res) => {
   try {
-    const tour = await Tour.findById(req.params.id);
+    const tour = await prisma.tour.findUnique({ where: { id: req.params.id } });
     res.status(200).json({
       status: 'success',
       message: 'tour found',
@@ -179,10 +180,16 @@ exports.getTour = async (req, res) => {
 //     });
 //   }
 // };
+// 
 
 exports.addNewTour = async (req, res) => {
+  const createdTour = req.body;
+  console.log(createdTour);
+
   try {
-    const newTour = await Tour.create(req.body);
+    const newTour = await prisma.tour.create({
+      data: createdTour
+    });
     res.status(201).json({
       status: 'success',
       message: 'new tour added successfully',
@@ -200,8 +207,9 @@ exports.addNewTour = async (req, res) => {
 
 exports.updateTour = async (req, res) => {
   try {
-    const updatedTour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
-      new: true
+    const updatedTour = await prisma.tour.update({
+      where: { id: req.params.id },
+      data: req.body
     });
 
     if (!updatedTour) {
@@ -255,8 +263,8 @@ exports.addNewTours = async (req, res) => {
 
 exports.deleteTour = async (req, res) => {
   try {
-    await Tour.findByIdAndDelete(req.params.id);
-    res.status(204).json({
+    await prisma.tour.delete({ where: { id: req.params.id } });
+    res.status(201).json({
       status: 'success',
       message: 'Tour Deleted'
     });
